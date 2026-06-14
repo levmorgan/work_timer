@@ -62,34 +62,34 @@ class SettingsDialog(QDialog):
         self._work_spin.setRange(1, 120)
         self._work_spin.setSuffix(" min")
         self._work_spin.setFixedWidth(100)
-        form.addRow("work_duration:", self._work_spin)
+        form.addRow("work_duration", self._work_spin)
 
         self._rest_spin = QSpinBox()
         self._rest_spin.setRange(1, 60)
         self._rest_spin.setSuffix(" min")
         self._rest_spin.setFixedWidth(100)
-        form.addRow("rest_duration:", self._rest_spin)
+        form.addRow("rest_duration", self._rest_spin)
 
         self._long_rest_spin = QSpinBox()
         self._long_rest_spin.setRange(1, 60)
         self._long_rest_spin.setSuffix(" min")
         self._long_rest_spin.setFixedWidth(100)
-        form.addRow("long_rest_duration:", self._long_rest_spin)
+        form.addRow("long_rest_duration", self._long_rest_spin)
 
         # --- Long rest settings ---
         self._long_rest_enabled_cb = QCheckBox()
-        form.addRow("long_rest:", self._long_rest_enabled_cb)
+        form.addRow("long_rest", self._long_rest_enabled_cb)
 
         self._periods_before_spin = QSpinBox()
         self._periods_before_spin.setRange(1, 10)
         self._periods_before_spin.setFixedWidth(100)
-        form.addRow("work_periods_before_long_rest:", self._periods_before_spin)
+        form.addRow("work_periods_before_long_rest", self._periods_before_spin)
 
         # --- Goal ---
         self._goal_spin = QSpinBox()
         self._goal_spin.setRange(1, 99)
         self._goal_spin.setFixedWidth(100)
-        form.addRow("goal:", self._goal_spin)
+        form.addRow("goal", self._goal_spin)
 
         # --- Work days ---
         self._day_checks: list[QCheckBox] = []
@@ -100,17 +100,17 @@ class SettingsDialog(QDialog):
             cb = QCheckBox(name)
             self._day_checks.append(cb)
             days_layout.addWidget(cb)
-        form.addRow("work_days:", days_widget)
+        form.addRow("work_days", days_widget)
 
         # --- Color scheme ---
         self._scheme_combo = QComboBox()
         self._scheme_combo.addItems(["dark", "light"])
         self._scheme_combo.setFixedWidth(100)
-        form.addRow("colour_scheme:", self._scheme_combo)
+        form.addRow("colour_scheme", self._scheme_combo)
 
         # --- Always on top ---
         self._always_on_top_cb = QCheckBox()
-        form.addRow("always_on_top:", self._always_on_top_cb)
+        form.addRow("always_on_top", self._always_on_top_cb)
 
         # --- Alarm sound ---
         self._alarm_combo = QComboBox()
@@ -131,7 +131,7 @@ class SettingsDialog(QDialog):
         self._preview_btn.clicked.connect(self._on_preview)
         alarm_row.addWidget(self._preview_btn)
         alarm_row.addStretch()
-        form.addRow("alarm_sound:", alarm_row)
+        form.addRow("alarm_sound", alarm_row)
 
         # --- Alarm volume ---
         vol_row = QHBoxLayout()
@@ -144,7 +144,7 @@ class SettingsDialog(QDialog):
         self._volume_label.setFixedWidth(36)
         vol_row.addWidget(self._volume_label)
         vol_row.addStretch()
-        form.addRow("alarm_volume:", vol_row)
+        form.addRow("alarm_volume", vol_row)
 
         layout.addLayout(form)
 
