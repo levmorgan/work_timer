@@ -18,6 +18,7 @@ DEFAULT_SETTINGS: dict[str, str] = {
     "color_scheme": "dark",
     "always_on_top": "0",
     "alarm_sound": "",
+    "alarm_volume": "100",
 }
 
 

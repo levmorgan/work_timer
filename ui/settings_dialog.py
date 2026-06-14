@@ -13,12 +13,15 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QHBoxLayout,
     QLabel,
+    QPushButton,
+    QSlider,
     QSpinBox,
     QVBoxLayout,
     QWidget,
 )
 
 from database import Database
+from sound import preview_alarm, set_volume, stop_preview
 from ui.theme import get_stylesheet
 
 DAY_NAMES = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
@@ -114,8 +117,34 @@ class SettingsDialog(QDialog):
         self._alarm_combo.addItem("Default")
         for fname in _scan_alarms():
             self._alarm_combo.addItem(fname)
-        self._alarm_combo.setFixedWidth(140)
-        form.addRow("alarm_sound:", self._alarm_combo)
+        self._alarm_combo.setFixedWidth(130)
+        alarm_row = QHBoxLayout()
+        alarm_row.setSpacing(6)
+        alarm_row.addWidget(self._alarm_combo)
+        self._preview_playing = False
+        self._preview_btn = QPushButton("▶")  # ▶
+        self._preview_btn.setToolTip("preview")
+        self._preview_btn.setFixedSize(30, 24)
+        self._preview_btn.setStyleSheet(
+            "QPushButton { font-size: 14px; border: none; background: transparent; padding: 0px; }"
+        )
+        self._preview_btn.clicked.connect(self._on_preview)
+        alarm_row.addWidget(self._preview_btn)
+        alarm_row.addStretch()
+        form.addRow("alarm_sound:", alarm_row)
+
+        # --- Alarm volume ---
+        vol_row = QHBoxLayout()
+        self._volume_slider = QSlider(Qt.Orientation.Horizontal)
+        self._volume_slider.setRange(0, 100)
+        self._volume_slider.setFixedWidth(150)
+        self._volume_slider.valueChanged.connect(self._on_volume_changed)
+        vol_row.addWidget(self._volume_slider)
+        self._volume_label = QLabel("100%")
+        self._volume_label.setFixedWidth(36)
+        vol_row.addWidget(self._volume_label)
+        vol_row.addStretch()
+        form.addRow("alarm_volume:", vol_row)
 
         layout.addLayout(form)
 
@@ -158,7 +187,41 @@ class SettingsDialog(QDialog):
         idx = self._alarm_combo.findText(alarm) if alarm else 0
         self._alarm_combo.setCurrentIndex(max(idx, 0))
 
+        vol = int(s.get("alarm_volume", "100"))
+        self._volume_slider.setValue(vol)
+        self._volume_label.setText(f"{vol}%")
+
+    def _on_volume_changed(self, val: int) -> None:
+        self._volume_label.setText(f"{val}%")
+        set_volume(val / 100.0)
+
+    def _on_preview(self) -> None:
+        if self._preview_playing:
+            stop_preview()
+            self._preview_playing = False
+            self._preview_btn.setText("▶")
+            return
+
+        idx = self._alarm_combo.currentIndex()
+        if idx <= 0:
+            preview_alarm(None, on_done=self._on_preview_done)
+        else:
+            name = self._alarm_combo.currentText()
+            path = str(ALARMS_DIR / name)
+            preview_alarm(path, on_done=self._on_preview_done)
+        self._preview_playing = True
+        self._preview_btn.setText("■")
+
+    def _on_preview_done(self) -> None:
+        self._preview_playing = False
+        self._preview_btn.setText("▶")
+
+    def reject(self) -> None:
+        stop_preview()
+        super().reject()
+
     def _on_save(self) -> None:
+        stop_preview()
         work_days = ",".join(
             str(i + 1) for i, cb in enumerate(self._day_checks) if cb.isChecked()
         )
@@ -180,6 +243,7 @@ class SettingsDialog(QDialog):
                 "alarm_sound": ""
                 if self._alarm_combo.currentIndex() <= 0
                 else self._alarm_combo.currentText(),
+                "alarm_volume": str(self._volume_slider.value()),
             }
         )
         self.accept()

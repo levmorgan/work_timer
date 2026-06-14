@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
 
 from database import Database
 from timer_controller import PERIOD_NAMES, Period, PomodoroTimer
-from sound import play_alert, stop_alert, set_alarm
+from sound import play_alert, set_alarm, set_volume, stop_alert
 from ui.end_dialog import EndOfPeriodDialog
 from ui.settings_dialog import SettingsDialog
 from ui.stats_dialog import StatsDialog
@@ -47,8 +47,8 @@ MAX_SCALE = 1.0
 BTN_W = 52
 BTN_H = 40
 BTN_SPACING = 8
-ICON_BTN_W = 40
-ICON_BTN_H = 36
+ICON_BTN_W = 28
+ICON_BTN_H = 28
 
 
 class MainWindow(QMainWindow):
@@ -68,11 +68,11 @@ class MainWindow(QMainWindow):
 
         central = QWidget()
         self.setCentralWidget(central)
-        root = QVBoxLayout(central)
-        root.setContentsMargins(20, 16, 20, 20)
-        root.setSpacing(12)
+        self._root = QVBoxLayout(central)
+        self._root.setContentsMargins(20, 16, 20, 20)
+        self._root.setSpacing(12)
 
-        # ---- Top bar: icons left, period info right ----
+        # ---- Top bar: icons left, period info centred ----
         top_bar = QHBoxLayout()
         top_bar.setSpacing(2)
 
@@ -96,7 +96,8 @@ class MainWindow(QMainWindow):
         self._period_font = QFont(FONT_FAMILY, PERIOD_FONT_SIZE)
         self._period_label.setFont(self._period_font)
         self._period_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        self._period_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        self._period_label.setWordWrap(False)
+        top_bar.addWidget(self._period_label, alignment=Qt.AlignmentFlag.AlignVCenter)
 
         self._long_rest_progress_label = QLabel("")
         self._progress_font = QFont(FONT_FAMILY, PROGRESS_FONT_SIZE)
@@ -104,28 +105,19 @@ class MainWindow(QMainWindow):
         self._long_rest_progress_label.setAlignment(
             Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         )
-        self._long_rest_progress_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-        # Wrap labels in a widget so they expand to fill the top bar
-        period_widget = QWidget()
-        period_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-        period_col = QVBoxLayout(period_widget)
-        period_col.setContentsMargins(0, 0, 0, 0)
-        period_col.setSpacing(2)
-        period_col.addWidget(self._period_label)
-        period_col.addWidget(self._long_rest_progress_label)
-        top_bar.addWidget(period_widget)
+        top_bar.addWidget(self._long_rest_progress_label, alignment=Qt.AlignmentFlag.AlignVCenter)
 
-        root.addLayout(top_bar)
+        self._root.addLayout(top_bar)
 
         # ---- Timer display ----
-        root.addStretch()
+        self._root.addStretch()
         self._time_label = QLabel("25:00")
         self._timer_font = QFont(FONT_FAMILY, TIMER_FONT_SIZE, QFont.Weight.Bold)
         self._time_label.setFont(self._timer_font)
         self._time_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._time_label.setObjectName("timer")
         self._time_label.mousePressEvent = lambda e: self._on_play_pause()
-        root.addWidget(self._time_label)
+        self._root.addWidget(self._time_label)
 
         # ---- Daily counter ----
         self._daily_label = QLabel("0/14")
@@ -133,13 +125,13 @@ class MainWindow(QMainWindow):
         self._daily_label.setFont(self._daily_font)
         self._daily_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._daily_label.setObjectName("daily")
-        root.addWidget(self._daily_label)
+        self._root.addWidget(self._daily_label)
 
-        root.addStretch()
+        self._root.addStretch()
 
         # ---- Control buttons ----
-        btn_layout = QHBoxLayout()
-        btn_layout.addStretch()
+        self._btn_layout = QHBoxLayout()
+        self._btn_layout.addStretch()
 
         self._play_btn = QPushButton(PLAY_PAUSE_SYMBOL)
         self._play_btn.setToolTip("play/pause (space)")
@@ -156,13 +148,11 @@ class MainWindow(QMainWindow):
         self._ff_btn.setFixedSize(BTN_W, BTN_H)
         self._ff_btn.clicked.connect(self._on_fast_forward)
 
-        btn_layout.addWidget(self._play_btn)
-        self._btn_spacing = btn_layout.addSpacing(BTN_SPACING)
-        btn_layout.addWidget(self._stop_btn)
-        btn_layout.addSpacing(BTN_SPACING)
-        btn_layout.addWidget(self._ff_btn)
-        btn_layout.addStretch()
-        root.addLayout(btn_layout)
+        self._btn_layout.addWidget(self._play_btn)
+        self._btn_layout.addWidget(self._stop_btn)
+        self._btn_layout.addWidget(self._ff_btn)
+        self._btn_layout.addStretch()
+        self._root.addLayout(self._btn_layout)
 
         # ---- Connections ----
         self._timer.tick.connect(self._on_tick)
@@ -187,6 +177,7 @@ class MainWindow(QMainWindow):
 
         # ---- Initial display ----
         self._apply_alarm()
+        self._apply_volume()
         self._update_time_display()
         self._update_period_label()
         self._update_daily_label()
@@ -253,6 +244,7 @@ class MainWindow(QMainWindow):
             self._apply_theme()
             self._apply_always_on_top()
             self._apply_alarm()
+            self._apply_volume()
 
     def _open_stats(self) -> None:
         scheme = self._db.get_setting("color_scheme") or "dark"
@@ -330,6 +322,10 @@ class MainWindow(QMainWindow):
         scheme = self._db.get_setting("color_scheme") or "dark"
         self.setStyleSheet(get_stylesheet(scheme))
 
+    def _apply_volume(self) -> None:
+        vol = int(self._db.get_setting("alarm_volume") or "100") / 100.0
+        set_volume(vol)
+
     def _apply_alarm(self) -> None:
         alarm = self._db.get_setting("alarm_sound") or ""
         alarm_path: str | None = None
@@ -370,29 +366,32 @@ class MainWindow(QMainWindow):
         scale_h = h / DEFAULT_WINDOW_H
         scale = max(min(scale_w, scale_h, MAX_SCALE), MIN_SCALE)
 
-        # Scale fonts
+        # Scale fonts (timer and daily counter only)
         for lbl, font, base_size in [
             (self._time_label, self._timer_font, TIMER_FONT_SIZE),
             (self._daily_label, self._daily_font, DAILY_FONT_SIZE),
-            (self._period_label, self._period_font, PERIOD_FONT_SIZE),
-            (self._long_rest_progress_label, self._progress_font, PROGRESS_FONT_SIZE),
         ]:
             font.setPointSizeF(base_size * scale)
             lbl.setFont(font)
 
-        # Scale buttons
-        bw = max(int(BTN_W * scale), 36)
-        bh = max(int(BTN_H * scale), 28)
-        iw = max(int(ICON_BTN_W * scale), 28)
-        ih = max(int(ICON_BTN_H * scale), 24)
-        for btn, w_, h_ in [
-            (self._play_btn, bw, bh),
-            (self._stop_btn, bw, bh),
-            (self._ff_btn, bw, bh),
-            (self._gear_btn, iw, ih),
-            (self._graph_btn, iw, ih),
-        ]:
-            btn.setFixedSize(w_, h_)
+        # Scale control button sizes, shrink padding so icons still fit
+        bw = max(int(BTN_W * scale), 26)
+        bh = max(int(BTN_H * scale), 22)
+        pad_v = max(int(6 * scale), 2)
+        pad_h = max(int(14 * scale), 4)
+        for btn in (self._play_btn, self._stop_btn, self._ff_btn):
+            btn.setFixedSize(bw, bh)
+            btn.setStyleSheet(
+                f"QPushButton {{ font-size: 14px;"
+                f" padding: {pad_v}px {pad_h}px; }}"
+            )
+
+        # Shrink margins and spacing at small sizes
+        top_margin = max(int(16 * scale), 4)
+        bottom_margin = max(int(20 * scale), 6)
+        side_margin = max(int(20 * scale), 8)
+        self._root.setContentsMargins(side_margin, top_margin, side_margin, bottom_margin)
+        self._root.setSpacing(max(int(12 * scale), 4))
 
     def closeEvent(self, event) -> None:
         self._save_window_state()

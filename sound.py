@@ -30,6 +30,7 @@ _effect: Optional[QSoundEffect] = None
 _player: Optional[QMediaPlayer] = None
 _audio_output: Optional[QAudioOutput] = None
 _current_file: Optional[str] = None  # user-selected file path, or None for default
+_volume: float = 1.0
 
 
 def _generate_wav() -> Path:
@@ -78,7 +79,7 @@ def _init_default_player() -> QSoundEffect:
     effect = QSoundEffect()
     effect.setSource(QUrl.fromLocalFile(str(_generate_wav())))
     effect.setLoopCount(QSoundEffect.Infinite.value)
-    effect.setVolume(1.0)
+    effect.setVolume(_volume)
     _effect = effect
     return _effect
 
@@ -87,7 +88,7 @@ def _init_file_player(filepath: str) -> QMediaPlayer:
     global _player, _audio_output
     if _player is None:
         _audio_output = QAudioOutput()
-        _audio_output.setVolume(1.0)
+        _audio_output.setVolume(_volume)
         _player = QMediaPlayer()
         _player.setAudioOutput(_audio_output)
         _player.mediaStatusChanged.connect(_on_media_status)
@@ -128,3 +129,57 @@ def stop_alert() -> None:
         _player.stop()
     if _effect is not None:
         _effect.stop()
+
+
+_preview_player: Optional[QMediaPlayer] = None
+_preview_clear_refs: list = []  # prevent GC of player/output
+_preview_done_callback: Optional[callable] = None
+
+
+def preview_alarm(filepath: str | None, on_done: callable | None = None) -> None:
+    """Play an alarm sound once without looping. Calls on_done when finished."""
+    global _preview_player, _preview_done_callback
+    if filepath and Path(filepath).is_file():
+        url = QUrl.fromLocalFile(filepath)
+    else:
+        url = QUrl.fromLocalFile(str(_generate_wav()))
+    output = QAudioOutput()
+    output.setVolume(_volume)
+    _preview_player = QMediaPlayer()
+    _preview_player.setAudioOutput(output)
+    _preview_player.setSource(url)
+    _preview_done_callback = on_done
+    if on_done:
+        _preview_player.mediaStatusChanged.connect(_on_preview_done)
+    _preview_player.play()
+    _preview_clear_refs[:] = [_preview_player, output]
+
+
+def _on_preview_done(status: QMediaPlayer.MediaStatus) -> None:
+    global _preview_player, _preview_done_callback
+    if status == QMediaPlayer.MediaStatus.EndOfMedia:
+        _preview_player = None
+        cb = _preview_done_callback
+        _preview_done_callback = None
+        if cb:
+            cb()
+
+
+def stop_preview() -> None:
+    """Stop the preview player."""
+    global _preview_player, _preview_done_callback
+    if _preview_player is not None:
+        _preview_player.stop()
+        _preview_player = None
+    _preview_done_callback = None
+
+def set_volume(vol: float) -> None:
+    """Set alarm volume (0.0–1.0)."""
+    global _volume
+    _volume = max(0.0, min(1.0, vol))
+    if _effect is not None:
+        _effect.setVolume(_volume)
+    if _audio_output is not None:
+        _audio_output.setVolume(_volume)
+    if _preview_player is not None and _preview_player.audioOutput() is not None:
+        _preview_player.audioOutput().setVolume(_volume)
