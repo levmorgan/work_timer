@@ -34,14 +34,12 @@ def _load_font(size: int) -> ImageFont.FreeTypeFont:
 
 def draw_text(draw: ImageDraw.Draw, size: int) -> None:
     """Draw 'work' centred on the canvas."""
-    font_size = max(int(size * 0.42), 12)
+    font_size = max(int(size * 0.28), 12)
     font = _load_font(font_size)
-    bbox = draw.textbbox((0, 0), "work", font=font)
-    tw = bbox[2] - bbox[0]
-    th = bbox[3] - bbox[1]
-    x = (size - tw) / 2
-    y = (size - th) / 2 - font_size * 0.05
-    draw.text((x, y), "work", fill=FG, font=font)
+    draw.text(
+        (size / 2, size / 2), "work",
+        fill=FG, font=font, anchor="mm",
+    )
 
 
 def generate_iconset(output_dir: Path) -> Path:
