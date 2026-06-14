@@ -16,8 +16,8 @@ FG = (0xE0, 0xE0, 0xE0)  # #e0e0e0
 SIZES = [16, 32, 64, 128, 256, 512, 1024]
 
 FONT_PATHS = [
+    "/System/Library/Fonts/Menlo.ttc",
     "/System/Library/Fonts/Helvetica.ttc",
-    "/System/Library/Fonts/STHeiti Light.ttc",
     "/Library/Fonts/Arial.ttf",
 ]
 
