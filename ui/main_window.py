@@ -36,6 +36,20 @@ PLAY_PAUSE_SYMBOL = "⏯"
 DEFAULT_WINDOW_W = 360
 DEFAULT_WINDOW_H = 400
 
+TIMER_FONT_SIZE = 56
+DAILY_FONT_SIZE = 16
+PERIOD_FONT_SIZE = 12
+PROGRESS_FONT_SIZE = 11
+MIN_SCALE = 0.5
+MAX_SCALE = 1.0
+
+
+BTN_W = 52
+BTN_H = 40
+BTN_SPACING = 8
+ICON_BTN_W = 40
+ICON_BTN_H = 36
+
 
 class MainWindow(QMainWindow):
     """The main Pomodoro timer window."""
@@ -50,7 +64,7 @@ class MainWindow(QMainWindow):
         self._blink_visible = True
 
         self.setWindowTitle("work_timer")
-        self.setMinimumSize(320, 280)
+        self.setMinimumSize(160, 140)
 
         central = QWidget()
         self.setCentralWidget(central)
@@ -62,29 +76,31 @@ class MainWindow(QMainWindow):
         top_bar = QHBoxLayout()
         top_bar.setSpacing(2)
 
-        gear_btn = QPushButton("⚙")  # ⚙
-        gear_btn.setToolTip("settings")
-        gear_btn.setFixedSize(40, 36)
-        gear_btn.setStyleSheet("QPushButton { font-size: 18px; border: none; background: transparent; padding: 0px; }")
-        gear_btn.clicked.connect(self._open_settings)
+        self._gear_btn = QPushButton("⚙")  # ⚙
+        self._gear_btn.setToolTip("settings")
+        self._gear_btn.setFixedSize(ICON_BTN_W, ICON_BTN_H)
+        self._gear_btn.setStyleSheet("QPushButton { font-size: 18px; border: none; background: transparent; padding: 0px; }")
+        self._gear_btn.clicked.connect(self._open_settings)
 
-        graph_btn = QPushButton("\U0001F4C8")  # 📈
-        graph_btn.setToolTip("history")
-        graph_btn.setFixedSize(40, 36)
-        graph_btn.setStyleSheet("QPushButton { font-size: 18px; border: none; background: transparent; padding: 0px; }")
-        graph_btn.clicked.connect(self._open_stats)
+        self._graph_btn = QPushButton("\U0001F4C8")  # 📈
+        self._graph_btn.setToolTip("history")
+        self._graph_btn.setFixedSize(ICON_BTN_W, ICON_BTN_H)
+        self._graph_btn.setStyleSheet("QPushButton { font-size: 18px; border: none; background: transparent; padding: 0px; }")
+        self._graph_btn.clicked.connect(self._open_stats)
 
-        top_bar.addWidget(gear_btn)
-        top_bar.addWidget(graph_btn)
+        top_bar.addWidget(self._gear_btn)
+        top_bar.addWidget(self._graph_btn)
         top_bar.addStretch()
 
         self._period_label = QLabel("work")
-        self._period_label.setFont(QFont(FONT_FAMILY, 12))
+        self._period_font = QFont(FONT_FAMILY, PERIOD_FONT_SIZE)
+        self._period_label.setFont(self._period_font)
         self._period_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self._period_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
         self._long_rest_progress_label = QLabel("")
-        self._long_rest_progress_label.setFont(QFont(FONT_FAMILY, 11))
+        self._progress_font = QFont(FONT_FAMILY, PROGRESS_FONT_SIZE)
+        self._long_rest_progress_label.setFont(self._progress_font)
         self._long_rest_progress_label.setAlignment(
             Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         )
@@ -104,7 +120,8 @@ class MainWindow(QMainWindow):
         # ---- Timer display ----
         root.addStretch()
         self._time_label = QLabel("25:00")
-        self._time_label.setFont(QFont(FONT_FAMILY, 56, QFont.Weight.Bold))
+        self._timer_font = QFont(FONT_FAMILY, TIMER_FONT_SIZE, QFont.Weight.Bold)
+        self._time_label.setFont(self._timer_font)
         self._time_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._time_label.setObjectName("timer")
         self._time_label.mousePressEvent = lambda e: self._on_play_pause()
@@ -112,7 +129,8 @@ class MainWindow(QMainWindow):
 
         # ---- Daily counter ----
         self._daily_label = QLabel("0/14")
-        self._daily_label.setFont(QFont(FONT_FAMILY, 16))
+        self._daily_font = QFont(FONT_FAMILY, DAILY_FONT_SIZE)
+        self._daily_label.setFont(self._daily_font)
         self._daily_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._daily_label.setObjectName("daily")
         root.addWidget(self._daily_label)
@@ -125,24 +143,24 @@ class MainWindow(QMainWindow):
 
         self._play_btn = QPushButton(PLAY_PAUSE_SYMBOL)
         self._play_btn.setToolTip("play/pause (space)")
-        self._play_btn.setFixedSize(52, 40)
+        self._play_btn.setFixedSize(BTN_W, BTN_H)
         self._play_btn.clicked.connect(self._on_play_pause)
 
-        stop_btn = QPushButton("■")  # ■
-        stop_btn.setToolTip("stop (esc)")
-        stop_btn.setFixedSize(52, 40)
-        stop_btn.clicked.connect(self._on_stop)
+        self._stop_btn = QPushButton("■")  # ■
+        self._stop_btn.setToolTip("stop (esc)")
+        self._stop_btn.setFixedSize(BTN_W, BTN_H)
+        self._stop_btn.clicked.connect(self._on_stop)
 
-        ff_btn = QPushButton("⏭")  # ⏭
-        ff_btn.setToolTip("fast_forward (→)")
-        ff_btn.setFixedSize(52, 40)
-        ff_btn.clicked.connect(self._on_fast_forward)
+        self._ff_btn = QPushButton("⏭")  # ⏭
+        self._ff_btn.setToolTip("fast_forward (→)")
+        self._ff_btn.setFixedSize(BTN_W, BTN_H)
+        self._ff_btn.clicked.connect(self._on_fast_forward)
 
         btn_layout.addWidget(self._play_btn)
-        btn_layout.addSpacing(8)
-        btn_layout.addWidget(stop_btn)
-        btn_layout.addSpacing(8)
-        btn_layout.addWidget(ff_btn)
+        self._btn_spacing = btn_layout.addSpacing(BTN_SPACING)
+        btn_layout.addWidget(self._stop_btn)
+        btn_layout.addSpacing(BTN_SPACING)
+        btn_layout.addWidget(self._ff_btn)
         btn_layout.addStretch()
         root.addLayout(btn_layout)
 
@@ -343,6 +361,38 @@ class MainWindow(QMainWindow):
     def _save_window_state(self) -> None:
         geo = self.geometry()
         self._db.save_window_state(geo.x(), geo.y(), geo.width(), geo.height())
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        w = self.width()
+        h = self.height()
+        scale_w = w / DEFAULT_WINDOW_W
+        scale_h = h / DEFAULT_WINDOW_H
+        scale = max(min(scale_w, scale_h, MAX_SCALE), MIN_SCALE)
+
+        # Scale fonts
+        for lbl, font, base_size in [
+            (self._time_label, self._timer_font, TIMER_FONT_SIZE),
+            (self._daily_label, self._daily_font, DAILY_FONT_SIZE),
+            (self._period_label, self._period_font, PERIOD_FONT_SIZE),
+            (self._long_rest_progress_label, self._progress_font, PROGRESS_FONT_SIZE),
+        ]:
+            font.setPointSizeF(base_size * scale)
+            lbl.setFont(font)
+
+        # Scale buttons
+        bw = max(int(BTN_W * scale), 36)
+        bh = max(int(BTN_H * scale), 28)
+        iw = max(int(ICON_BTN_W * scale), 28)
+        ih = max(int(ICON_BTN_H * scale), 24)
+        for btn, w_, h_ in [
+            (self._play_btn, bw, bh),
+            (self._stop_btn, bw, bh),
+            (self._ff_btn, bw, bh),
+            (self._gear_btn, iw, ih),
+            (self._graph_btn, iw, ih),
+        ]:
+            btn.setFixedSize(w_, h_)
 
     def closeEvent(self, event) -> None:
         self._save_window_state()

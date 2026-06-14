@@ -1,5 +1,6 @@
 """Entry point for the Pomodoro timer application."""
 
+import signal
 import sys
 
 from PySide6.QtCore import Qt, QTimer
@@ -13,6 +14,9 @@ from timer_controller import PomodoroTimer
 def main() -> None:
     app = QApplication(sys.argv)
     app.setApplicationName("work_timer")
+
+    # Ctrl+C in the terminal quits the app cleanly
+    signal.signal(signal.SIGINT, lambda *_: app.quit())
 
     db = Database()
 

@@ -10,11 +10,9 @@ QLabel {
 }
 QLabel#timer {
     color: #e0e0e0;
-    font-size: 56px;
 }
 QLabel#daily {
     color: #888888;
-    font-size: 16px;
 }
 QPushButton {
     background-color: #2a2a2a;
@@ -80,11 +78,9 @@ QLabel {
 }
 QLabel#timer {
     color: #222222;
-    font-size: 56px;
 }
 QLabel#daily {
     color: #666666;
-    font-size: 16px;
 }
 QPushButton {
     background-color: #e0e0e0;
