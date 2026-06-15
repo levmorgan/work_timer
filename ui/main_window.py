@@ -54,6 +54,14 @@ BTN_SPACING = 8
 ICON_BTN_W = 28
 ICON_BTN_H = 28
 
+# Button colors matching the global stylesheet (dark / light handled in resize)
+BTN_BG_DARK = "#2a2a2a"
+BTN_BG_LIGHT = "#e0e0e0"
+BTN_BORDER_DARK = "#555555"
+BTN_BORDER_LIGHT = "#999999"
+BTN_TEXT_DARK = "#e0e0e0"
+BTN_TEXT_LIGHT = "#222222"
+
 
 class MainWindow(QMainWindow):
     """The main Pomodoro timer window."""
@@ -387,10 +395,26 @@ class MainWindow(QMainWindow):
             lbl.setFont(font)
 
         # Scale control button sizes, shrink padding so icons still fit
-        bw = max(int(BTN_W * scale), 26)
-        bh = max(int(BTN_H * scale), 22)
+        bw = max(int(BTN_W * scale), 40)
+        bh = max(int(BTN_H * scale), 28)
+        pad_v = max(int(6 * scale), 2)
+        pad_h = max(int(14 * scale), 6)
+        scheme = self._db.get_setting("color_scheme") or "dark"
+        if scheme == "light":
+            bg, border, text = BTN_BG_LIGHT, BTN_BORDER_LIGHT, BTN_TEXT_LIGHT
+        else:
+            bg, border, text = BTN_BG_DARK, BTN_BORDER_DARK, BTN_TEXT_DARK
+        _btn_style = (
+            "QPushButton {"
+            " font-family: 'Font Awesome 7 Free'; font-weight: 900;"
+            f" background-color: {bg}; color: {text};"
+            f" border: 1px solid {border}; border-radius: 4px;"
+            " font-size: 14px;"
+            f" padding: {pad_v}px {pad_h}px; }}"
+        )
         for btn in (self._play_btn, self._stop_btn, self._ff_btn):
             btn.setFixedSize(bw, bh)
+            btn.setStyleSheet(_btn_style)
 
         # Shrink margins and spacing at small sizes
         top_margin = max(int(16 * scale), 4)
