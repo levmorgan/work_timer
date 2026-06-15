@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from datetime import date
 from pathlib import Path
 
@@ -45,7 +46,7 @@ DAILY_FONT_SIZE = 16
 PERIOD_FONT_SIZE = 12
 PROGRESS_FONT_SIZE = 11
 MIN_SCALE = 0.5
-MIN_SCALE_TIMER = 0.75
+MIN_SCALE_TIMER = 0.65 if sys.platform == "win32" else 0.75
 MAX_SCALE = 1.0
 
 

@@ -53,8 +53,9 @@ def _draw_text(draw: ImageDraw.Draw, size: int) -> None:
     )
 
 
-def _base_image() -> Image.Image:
-    img = Image.new("RGB", (BASE_SIZE, BASE_SIZE), BG)
+def _base_image(rgba: bool = False) -> Image.Image:
+    mode = "RGBA" if rgba else "RGB"
+    img = Image.new(mode, (BASE_SIZE, BASE_SIZE), (*BG, 255) if rgba else BG)
     _draw_text(ImageDraw.Draw(img), BASE_SIZE)
     return img
 
@@ -80,11 +81,12 @@ def _gen_icns(output_dir: Path) -> Path:
 
 def _gen_ico(output_dir: Path) -> Path:
     ico = output_dir / "icon.ico"
-    # Standard Windows icon sizes, largest first (required by Windows)
+    # Standard Windows icon sizes, largest first (required by Windows).
+    # RGBA mode signals Pillow to use PNG compression for the 256×256
+    # entry, which Windows needs for the taskbar icon.
     sizes = [256, 128, 64, 48, 32, 24, 16]
-    base = _base_image()
+    base = _base_image(rgba=True)
     imgs = [base.resize((s, s), Image.LANCZOS) for s in sizes]
-    # Pillow ICO saver — each sub-image must match its declared size
     imgs[0].save(
         ico, format="ICO",
         sizes=[(s, s) for s in sizes],

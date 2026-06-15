@@ -4,6 +4,9 @@ on:
   push:
     tags: ["*"]
 
+permissions:
+  contents: write
+
 jobs:
   build:
     strategy:
@@ -40,8 +43,32 @@ jobs:
       - name: build ${{ matrix.artifact }}
         run: ${{ matrix.script }}
 
-      - name: upload artifact
-        uses: actions/upload-artifact@v4
+      - name: package (macOS)
+        if: runner.os == 'macOS'
+        run: cd dist && zip -r ../work_timer-macos.zip work_timer.app
+
+      - name: package (Linux)
+        if: runner.os == 'Linux'
+        run: cd dist && tar czf ../work_timer-linux.tar.gz work_timer
+
+      - name: package (Windows)
+        if: runner.os == 'Windows'
+        run: Compress-Archive -Path dist\work_timer\* -DestinationPath work_timer-windows.zip
+
+      - name: upload to release (macOS)
+        if: runner.os == 'macOS'
+        uses: softprops/action-gh-release@v2
         with:
-          name: ${{ matrix.artifact }}
-          path: dist/
+          files: work_timer-macos.zip
+
+      - name: upload to release (Linux)
+        if: runner.os == 'Linux'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: work_timer-linux.tar.gz
+
+      - name: upload to release (Windows)
+        if: runner.os == 'Windows'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: work_timer-windows.zip
