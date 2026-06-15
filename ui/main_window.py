@@ -6,8 +6,8 @@ import sys
 from datetime import date
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QFont, QKeySequence, QShortcut
+from PySide6.QtCore import Qt, QPoint, QTimer
+from PySide6.QtGui import QFont, QKeySequence, QMouseEvent, QShortcut
 from PySide6.QtWidgets import (
     QDialog,
     QHBoxLayout,
@@ -22,10 +22,7 @@ from PySide6.QtWidgets import (
 from database import Database
 from timer_controller import PERIOD_NAMES, Period, PomodoroTimer
 from sound import play_alert, set_alarm, set_volume, stop_alert
-from ui.end_dialog import EndOfPeriodDialog
 from ui.settings_dialog import SettingsDialog, alarms_dir
-from ui.stats_dialog import StatsDialog
-
 from ui.theme import get_stylesheet
 
 FONT_FAMILY = "Menlo, Monaco, Consolas, Courier New, monospace"
@@ -65,6 +62,25 @@ BTN_TEXT_DARK = "#e0e0e0"
 BTN_TEXT_LIGHT = "#222222"
 
 
+class _LoadingDialog(QDialog):
+    """Shown briefly while matplotlib loads."""
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setWindowTitle("work_timer")
+        self.setModal(True)
+        self.setFixedSize(200, 60)
+        self.setWindowFlags(
+            Qt.WindowType.Dialog
+            | Qt.WindowType.CustomizeWindowHint
+            | Qt.WindowType.WindowTitleHint
+        )
+        layout = QVBoxLayout(self)
+        label = QLabel("loading_history...")
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(label)
+
+
 class MainWindow(QMainWindow):
     """The main Pomodoro timer window."""
 
@@ -76,6 +92,8 @@ class MainWindow(QMainWindow):
         self._blink_timer = QTimer(self)
         self._blink_timer.timeout.connect(self._toggle_blink)
         self._blink_visible = True
+
+        self._drag_start: QPoint | None = None
 
         self.setWindowTitle("work_timer")
         self.setMinimumSize(160, 140)
@@ -188,16 +206,17 @@ class MainWindow(QMainWindow):
         QShortcut(QKeySequence(Qt.Key.Key_Escape), self, activated=self._on_stop)
         QShortcut(QKeySequence(Qt.Key.Key_Right), self, activated=self._on_fast_forward)
 
-        # ---- Restore window state ----
-        self._restore_window_state()
-
-        # ---- Apply theme ----
-        self._apply_theme()
-
-        # ---- Always on top ----
-        self._apply_always_on_top()
-
         # ---- Initial display ----
+        self._update_time_display()
+        self._update_period_label()
+        self._update_daily_label()
+
+    # Called by main.py after show() — applies persisted state without
+    # delaying the initial paint.
+    def apply_saved_state(self) -> None:
+        self._restore_window_state()
+        self._apply_theme()
+        self._apply_always_on_top()
         self._apply_alarm()
         self._apply_volume()
         self._update_time_display()
@@ -269,10 +288,17 @@ class MainWindow(QMainWindow):
             self._apply_volume()
 
     def _open_stats(self) -> None:
+        loading = _LoadingDialog(self)
+        loading.show()
+        QTimer.singleShot(0, lambda: self._finish_open_stats(loading))
+
+    def _finish_open_stats(self, loading: _LoadingDialog) -> None:
+        from ui.stats_dialog import StatsDialog
         scheme = self._db.get_setting("color_scheme") or "dark"
         dlg = StatsDialog(
             self._db, self._timer.work_periods_completed_today, scheme, self
         )
+        loading.close()
         dlg.exec()
 
     def _apply_settings_from_db(self) -> None:
@@ -284,6 +310,7 @@ class MainWindow(QMainWindow):
     # ---- End-of-period dialog ----
 
     def _show_end_dialog(self, period: Period) -> None:
+        from ui.end_dialog import EndOfPeriodDialog
         dlg = EndOfPeriodDialog(period, self)
         dlg.exec()
 
@@ -423,6 +450,16 @@ class MainWindow(QMainWindow):
         side_margin = max(int(20 * full_scale), 8)
         self._root.setContentsMargins(side_margin, top_margin, side_margin, bottom_margin)
         self._root.setSpacing(max(int(12 * full_scale), 4))
+
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        self._drag_start = event.globalPosition().toPoint()
+
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:
+        if self._drag_start is not None:
+            delta = event.globalPosition().toPoint() - self._drag_start
+            if delta.manhattanLength() > 4:
+                self._drag_start = None
+                self.windowHandle().startSystemMove()
 
     def closeEvent(self, event) -> None:
         self._save_window_state()

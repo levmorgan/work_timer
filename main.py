@@ -58,6 +58,8 @@ def main() -> None:
     from ui.main_window import MainWindow
 
     window = MainWindow(db, timer)
+    window.show()
+    window.apply_saved_state()
 
     # Set the window icon (taskbar, alt-tab, etc.)
     _set_app_icon(window)
@@ -72,7 +74,6 @@ def main() -> None:
     midnight_timer.timeout.connect(timer.check_date_change)
     midnight_timer.start(30_000)  # every 30 seconds
 
-    window.show()
     sys.exit(app.exec())
 
 
