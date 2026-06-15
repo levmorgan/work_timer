@@ -134,11 +134,11 @@ class SettingsDialog(QDialog):
         alarm_row.setSpacing(6)
         alarm_row.addWidget(self._alarm_combo)
         self._preview_playing = False
-        self._preview_btn = QPushButton("▶")  # ▶
+        self._preview_btn = QPushButton("")  # fa-play
         self._preview_btn.setToolTip("preview")
         self._preview_btn.setFixedSize(30, 24)
         self._preview_btn.setStyleSheet(
-            "QPushButton { font-size: 14px; border: none; background: transparent; padding: 0px; }"
+            "QPushButton { font-family: 'Font Awesome 7 Free'; font-weight: 900; font-size: 14px; border: none; background: transparent; padding: 0px; }"
         )
         self._preview_btn.clicked.connect(self._on_preview)
         alarm_row.addWidget(self._preview_btn)
@@ -211,7 +211,7 @@ class SettingsDialog(QDialog):
         if self._preview_playing:
             stop_preview()
             self._preview_playing = False
-            self._preview_btn.setText("▶")
+            self._preview_btn.setText("")
             return
 
         idx = self._alarm_combo.currentIndex()
@@ -222,11 +222,11 @@ class SettingsDialog(QDialog):
             path = str(alarms_dir() / name)
             preview_alarm(path, on_done=self._on_preview_done)
         self._preview_playing = True
-        self._preview_btn.setText("■")
+        self._preview_btn.setText("")  # fa-stop
 
     def _on_preview_done(self) -> None:
         self._preview_playing = False
-        self._preview_btn.setText("▶")
+        self._preview_btn.setText("")  # fa-play
 
     def reject(self) -> None:
         stop_preview()

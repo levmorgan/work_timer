@@ -2,18 +2,25 @@
 
 import signal
 import sys
+from pathlib import Path
 
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QKeySequence, QShortcut
+from PySide6.QtGui import QFontDatabase, QKeySequence, QShortcut
 from PySide6.QtWidgets import QApplication
 
 from database import Database
 from timer_controller import PomodoroTimer
 
 
+def _load_icon_font() -> None:
+    font_path = Path(__file__).resolve().parent / "assets" / "fontawesome.otf"
+    QFontDatabase.addApplicationFont(str(font_path))
+
+
 def main() -> None:
     app = QApplication(sys.argv)
     app.setApplicationName("work_timer")
+    _load_icon_font()
 
     # Ctrl+C in the terminal quits the app cleanly.
     # SIGINT works on all platforms but on Windows the handler fires

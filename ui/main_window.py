@@ -29,8 +29,13 @@ from ui.theme import get_stylesheet
 
 FONT_FAMILY = "Menlo, Monaco, Consolas, Courier New, monospace"
 
-PLAY_SYMBOL = "▶"
-PAUSE_SYMBOL = "∥"
+# noqa — Font Awesome Private Use Area codepoints
+PLAY_SYMBOL = ""       # fa-play
+PAUSE_SYMBOL = ""      # fa-pause
+STOP_SYMBOL = ""       # fa-stop
+FF_SYMBOL = ""         # fa-forward
+GEAR_SYMBOL = ""       # fa-gear
+CHART_SYMBOL = ""      # fa-chart-bar
 
 DEFAULT_WINDOW_W = 360
 DEFAULT_WINDOW_H = 400
@@ -75,16 +80,20 @@ class MainWindow(QMainWindow):
         top_bar = QHBoxLayout()
         top_bar.setSpacing(2)
 
-        self._gear_btn = QPushButton("⚙")  # ⚙
+        self._gear_btn = QPushButton(GEAR_SYMBOL)
         self._gear_btn.setToolTip("settings")
         self._gear_btn.setFixedSize(ICON_BTN_W, ICON_BTN_H)
-        self._gear_btn.setStyleSheet("QPushButton { font-size: 18px; border: none; background: transparent; padding: 0px; }")
+        self._gear_btn.setStyleSheet(
+            "QPushButton { font-family: 'Font Awesome 7 Free'; font-weight: 900; font-size: 18px; border: none; background: transparent; padding: 0px; }"
+        )
         self._gear_btn.clicked.connect(self._open_settings)
 
-        self._graph_btn = QPushButton("\U0001F4C8")  # 📈
+        self._graph_btn = QPushButton(CHART_SYMBOL)
         self._graph_btn.setToolTip("history")
         self._graph_btn.setFixedSize(ICON_BTN_W, ICON_BTN_H)
-        self._graph_btn.setStyleSheet("QPushButton { font-size: 18px; border: none; background: transparent; padding: 0px; }")
+        self._graph_btn.setStyleSheet(
+            "QPushButton { font-family: 'Font Awesome 7 Free'; font-weight: 900; font-size: 18px; border: none; background: transparent; padding: 0px; }"
+        )
         self._graph_btn.clicked.connect(self._open_stats)
 
         top_bar.addWidget(self._gear_btn)
@@ -132,19 +141,23 @@ class MainWindow(QMainWindow):
         self._btn_layout = QHBoxLayout()
         self._btn_layout.addStretch()
 
+        _icon_font = QFont("Font Awesome 7 Free", 14, QFont.Weight.Black)
         self._play_btn = QPushButton(PLAY_SYMBOL)
         self._play_btn.setToolTip("play/pause (space)")
         self._play_btn.setFixedSize(BTN_W, BTN_H)
+        self._play_btn.setFont(_icon_font)
         self._play_btn.clicked.connect(self._on_play_pause)
 
-        self._stop_btn = QPushButton("■")  # ■
+        self._stop_btn = QPushButton(STOP_SYMBOL)
         self._stop_btn.setToolTip("stop (esc)")
         self._stop_btn.setFixedSize(BTN_W, BTN_H)
+        self._stop_btn.setFont(_icon_font)
         self._stop_btn.clicked.connect(self._on_stop)
 
-        self._ff_btn = QPushButton("»")
-        self._ff_btn.setToolTip("fast_forward (»)")
+        self._ff_btn = QPushButton(FF_SYMBOL)
+        self._ff_btn.setToolTip("fast_forward (→)")
         self._ff_btn.setFixedSize(BTN_W, BTN_H)
+        self._ff_btn.setFont(_icon_font)
         self._ff_btn.clicked.connect(self._on_fast_forward)
 
         self._btn_layout.addWidget(self._play_btn)
@@ -376,14 +389,8 @@ class MainWindow(QMainWindow):
         # Scale control button sizes, shrink padding so icons still fit
         bw = max(int(BTN_W * scale), 26)
         bh = max(int(BTN_H * scale), 22)
-        pad_v = max(int(6 * scale), 2)
-        pad_h = max(int(14 * scale), 4)
         for btn in (self._play_btn, self._stop_btn, self._ff_btn):
             btn.setFixedSize(bw, bh)
-            btn.setStyleSheet(
-                f"QPushButton {{ font-size: 14px;"
-                f" padding: {pad_v}px {pad_h}px; }}"
-            )
 
         # Shrink margins and spacing at small sizes
         top_margin = max(int(16 * scale), 4)

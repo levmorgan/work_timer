@@ -21,7 +21,7 @@ a = Analysis(
     ["main.py"],
     pathex=[],
     binaries=[],
-    datas=matplotlib_datas,
+    datas=matplotlib_datas + [("assets/fontawesome.otf", "assets")],
     hiddenimports=hidden_imports,
     hookspath=[],
     hooksconfig={},
