@@ -2,9 +2,7 @@ name: build
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    tags: ["*"]
 
 jobs:
   build:
@@ -13,19 +11,16 @@ jobs:
         include:
           - os: macos-latest
             script: ./build_mac.sh
-            artifact: work_timer.app
+            artifact: work_timer-macos
             pip_path: .venv/bin/pip
-            pytest_path: .venv/bin/pytest
           - os: ubuntu-latest
             script: ./build_linux.sh
-            artifact: work_timer
+            artifact: work_timer-linux
             pip_path: .venv/bin/pip
-            pytest_path: .venv/bin/pytest
           - os: windows-latest
             script: .\build_windows.bat
-            artifact: work_timer.exe
+            artifact: work_timer-windows
             pip_path: .venv/Scripts/pip
-            pytest_path: .venv/Scripts/pytest
 
     runs-on: ${{ matrix.os }}
 
