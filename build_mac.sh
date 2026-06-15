@@ -21,6 +21,10 @@ echo "=== 4. Building .app with PyInstaller ==="
 "$PYTHON" -m PyInstaller pomodoro.spec
 
 echo ""
+echo "=== 5. Copying alarm sounds ==="
+cp -R alarms dist/work_timer.app/Contents/Resources/alarms
+
+echo ""
 echo "=== Done ==="
 echo "App: $(pwd)/dist/work_timer.app"
 ls -la dist/work_timer.app/Contents/MacOS/work_timer

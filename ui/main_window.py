@@ -22,7 +22,7 @@ from database import Database
 from timer_controller import PERIOD_NAMES, Period, PomodoroTimer
 from sound import play_alert, set_alarm, set_volume, stop_alert
 from ui.end_dialog import EndOfPeriodDialog
-from ui.settings_dialog import SettingsDialog
+from ui.settings_dialog import SettingsDialog, alarms_dir
 from ui.stats_dialog import StatsDialog
 
 from ui.theme import get_stylesheet
@@ -30,8 +30,7 @@ from ui.theme import get_stylesheet
 FONT_FAMILY = "Menlo, Monaco, Consolas, Courier New, monospace"
 
 PLAY_SYMBOL = "▶"
-PAUSE_SYMBOL = "⏸"
-PLAY_PAUSE_SYMBOL = "⏯"
+PAUSE_SYMBOL = "∥"
 
 DEFAULT_WINDOW_W = 360
 DEFAULT_WINDOW_H = 400
@@ -133,7 +132,7 @@ class MainWindow(QMainWindow):
         self._btn_layout = QHBoxLayout()
         self._btn_layout.addStretch()
 
-        self._play_btn = QPushButton(PLAY_PAUSE_SYMBOL)
+        self._play_btn = QPushButton(PLAY_SYMBOL)
         self._play_btn.setToolTip("play/pause (space)")
         self._play_btn.setFixedSize(BTN_W, BTN_H)
         self._play_btn.clicked.connect(self._on_play_pause)
@@ -143,8 +142,8 @@ class MainWindow(QMainWindow):
         self._stop_btn.setFixedSize(BTN_W, BTN_H)
         self._stop_btn.clicked.connect(self._on_stop)
 
-        self._ff_btn = QPushButton("⏭")  # ⏭
-        self._ff_btn.setToolTip("fast_forward (→)")
+        self._ff_btn = QPushButton("»")
+        self._ff_btn.setToolTip("fast_forward (»)")
         self._ff_btn.setFixedSize(BTN_W, BTN_H)
         self._ff_btn.clicked.connect(self._on_fast_forward)
 
@@ -330,7 +329,7 @@ class MainWindow(QMainWindow):
         alarm = self._db.get_setting("alarm_sound") or ""
         alarm_path: str | None = None
         if alarm:
-            full = Path(__file__).resolve().parent.parent / "alarms" / alarm
+            full = alarms_dir() / alarm
             if full.is_file():
                 alarm_path = str(full)
         set_alarm(alarm_path)

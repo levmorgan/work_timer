@@ -27,6 +27,11 @@ echo "=== 4. Building executable with PyInstaller ==="
 "$PYTHON" -m PyInstaller pomodoro.spec
 
 echo ""
+echo ""
+echo "=== 5. Copying alarm sounds ==="
+cp -R alarms dist/work_timer/alarms
+
+echo ""
 echo "=== Done ==="
 echo "Executable: $(pwd)/dist/work_timer/work_timer"
 ls -la dist/work_timer/work_timer

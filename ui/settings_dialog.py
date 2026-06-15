@@ -26,15 +26,27 @@ from ui.theme import get_stylesheet
 
 DAY_NAMES = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
-ALARMS_DIR = Path(__file__).resolve().parent.parent / "alarms"
 AUDIO_EXTENSIONS = {".wav", ".mp3"}
+
+
+def alarms_dir() -> Path:
+    """Return the alarms/ directory, whether running from source or frozen."""
+    import sys
+    if getattr(sys, "frozen", False):
+        if sys.platform == "darwin":
+            # .app bundle: executable is Contents/MacOS/work_timer
+            return Path(sys.executable).parent.parent / "Resources" / "alarms"
+        return Path(sys.executable).parent / "alarms"
+    return Path(__file__).resolve().parent.parent / "alarms"
+
 
 def _scan_alarms() -> list[str]:
     """Return sorted list of alarm files in the alarms/ directory."""
-    if not ALARMS_DIR.is_dir():
+    d = alarms_dir()
+    if not d.is_dir():
         return []
     files: list[str] = []
-    for entry in sorted(ALARMS_DIR.iterdir()):
+    for entry in sorted(d.iterdir()):
         if entry.is_file() and entry.suffix.lower() in AUDIO_EXTENSIONS:
             files.append(entry.name)
     return files
@@ -207,7 +219,7 @@ class SettingsDialog(QDialog):
             preview_alarm(None, on_done=self._on_preview_done)
         else:
             name = self._alarm_combo.currentText()
-            path = str(ALARMS_DIR / name)
+            path = str(alarms_dir() / name)
             preview_alarm(path, on_done=self._on_preview_done)
         self._preview_playing = True
         self._preview_btn.setText("■")

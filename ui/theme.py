@@ -21,6 +21,10 @@ QPushButton {
     border-radius: 4px;
     padding: 6px 14px;
     font-size: 14px;
+    outline: none;
+}
+QPushButton:focus {
+    outline: none;
 }
 QPushButton:hover {
     background-color: #3a3a3a;
@@ -89,6 +93,10 @@ QPushButton {
     border-radius: 4px;
     padding: 6px 14px;
     font-size: 14px;
+    outline: none;
+}
+QPushButton:focus {
+    outline: none;
 }
 QPushButton:hover {
     background-color: #d0d0d0;

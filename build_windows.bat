@@ -25,6 +25,11 @@ echo === 4. Building executable with PyInstaller ===
 .venv\Scripts\python -m PyInstaller pomodoro.spec
 
 echo.
+echo === 5. Copying alarm sounds ===
+if not exist dist\work_timer\alarms mkdir dist\work_timer\alarms
+xcopy /E /Y alarms dist\work_timer\alarms\
+
+echo.
 echo === Done ===
 echo Executable: %cd%\dist\work_timer\work_timer.exe
 dir dist\work_timer\work_timer.exe

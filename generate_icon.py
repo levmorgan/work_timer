@@ -80,9 +80,16 @@ def _gen_icns(output_dir: Path) -> Path:
 
 def _gen_ico(output_dir: Path) -> Path:
     ico = output_dir / "icon.ico"
-    sizes = [s for s in SIZES if s <= 256]
-    imgs = [_base_image().resize((s, s), Image.LANCZOS) for s in sizes]
-    imgs[0].save(ico, format="ICO", sizes=[(s, s) for s in sizes], append_images=imgs[1:])
+    # Standard Windows icon sizes, largest first (required by Windows)
+    sizes = [256, 128, 64, 48, 32, 24, 16]
+    base = _base_image()
+    imgs = [base.resize((s, s), Image.LANCZOS) for s in sizes]
+    # Pillow ICO saver — each sub-image must match its declared size
+    imgs[0].save(
+        ico, format="ICO",
+        sizes=[(s, s) for s in sizes],
+        append_images=imgs[1:],
+    )
     return ico
 
 
