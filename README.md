@@ -84,6 +84,14 @@ build_windows.bat
 # output: dist\work_timer\work_timer.exe
 ```
 
+## development
+
+enable the pre-commit hook (runs tests before every commit):
+
+```
+git config core.hooksPath .githooks
+```
+
 ## settings
 
 | setting | default | description |
