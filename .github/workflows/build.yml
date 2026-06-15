@@ -14,12 +14,18 @@ jobs:
           - os: macos-latest
             script: ./build_mac.sh
             artifact: work_timer.app
+            pip_path: .venv/bin/pip
+            pytest_path: .venv/bin/pytest
           - os: ubuntu-latest
             script: ./build_linux.sh
             artifact: work_timer
+            pip_path: .venv/bin/pip
+            pytest_path: .venv/bin/pytest
           - os: windows-latest
             script: build_windows.bat
             artifact: work_timer.exe
+            pip_path: .venv/Scripts/pip
+            pytest_path: .venv/Scripts/pytest
 
     runs-on: ${{ matrix.os }}
 
@@ -30,13 +36,11 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: create venv and install dependencies
-        run: |
-          python -m venv .venv
-          .venv/Scripts/pip install -r requirements-dev.txt || .venv/bin/pip install -r requirements-dev.txt
+      - name: create venv
+        run: python -m venv .venv
 
-      - name: run tests
-        run: .venv/Scripts/pytest tests/ -q || .venv/bin/pytest tests/ -q
+      - name: install dependencies
+        run: ${{ matrix.pip_path }} install -r requirements-dev.txt
 
       - name: build ${{ matrix.artifact }}
         run: ${{ matrix.script }}
