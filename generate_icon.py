@@ -1,11 +1,14 @@
-"""Generate icon.icns for the work_timer app.
+"""Generate app icons for the work_timer app.
 
 Draws the text 'work' in #e0e0e0 on a #1a1a1a background.
-Requires Pillow and macOS (for iconutil).
+On macOS: produces icon.icns via iconutil.
+On Windows: produces icon.ico via Pillow.
+On Linux: produces icon.png.
 """
 
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -14,10 +17,19 @@ BG = (0x1A, 0x1A, 0x1A)  # #1a1a1a
 FG = (0xE0, 0xE0, 0xE0)  # #e0e0e0
 
 SIZES = [16, 32, 64, 128, 256, 512, 1024]
+BASE_SIZE = 1024
 
 FONT_PATHS = [
+    # macOS
     "/System/Library/Fonts/Menlo.ttc",
     "/System/Library/Fonts/Helvetica.ttc",
+    # Linux
+    "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
+    "/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf",
+    # Windows
+    "C:/Windows/Fonts/consola.ttf",
+    "C:/Windows/Fonts/cour.ttf",
+    # fallback
     "/Library/Fonts/Arial.ttf",
 ]
 
@@ -32,8 +44,7 @@ def _load_font(size: int) -> ImageFont.FreeTypeFont:
     return ImageFont.load_default()
 
 
-def draw_text(draw: ImageDraw.Draw, size: int) -> None:
-    """Draw 'work' centred on the canvas."""
+def _draw_text(draw: ImageDraw.Draw, size: int) -> None:
     font_size = max(int(size * 0.28), 12)
     font = _load_font(font_size)
     draw.text(
@@ -42,37 +53,56 @@ def draw_text(draw: ImageDraw.Draw, size: int) -> None:
     )
 
 
-def generate_iconset(output_dir: Path) -> Path:
-    """Generate PNGs at all required sizes in an .iconset directory."""
+def _base_image() -> Image.Image:
+    img = Image.new("RGB", (BASE_SIZE, BASE_SIZE), BG)
+    _draw_text(ImageDraw.Draw(img), BASE_SIZE)
+    return img
+
+
+def _gen_icns(output_dir: Path) -> Path:
     iconset = output_dir / "icon.iconset"
     iconset.mkdir(parents=True, exist_ok=True)
-
     for size in SIZES:
-        img = Image.new("RGB", (size, size), BG)
-        draw = ImageDraw.Draw(img)
-        draw_text(draw, size)
-
+        img = _base_image().resize((size, size), Image.LANCZOS)
         img.save(iconset / f"icon_{size}x{size}.png")
-
         half = size // 2
         if half >= 16:
             img.save(iconset / f"icon_{half}x{half}@2x.png")
 
-    return iconset
+    icns = output_dir / "icon.icns"
+    subprocess.run(
+        ["iconutil", "-c", "icns", "-o", str(icns), str(iconset)],
+        check=True,
+    )
+    shutil.rmtree(iconset)
+    return icns
+
+
+def _gen_ico(output_dir: Path) -> Path:
+    ico = output_dir / "icon.ico"
+    sizes = [s for s in SIZES if s <= 256]
+    imgs = [_base_image().resize((s, s), Image.LANCZOS) for s in sizes]
+    imgs[0].save(ico, format="ICO", sizes=[(s, s) for s in sizes], append_images=imgs[1:])
+    return ico
+
+
+def _gen_png(output_dir: Path) -> Path:
+    png = output_dir / "icon.png"
+    _base_image().save(png, "PNG")
+    return png
 
 
 def main() -> None:
     output_dir = Path(__file__).resolve().parent
-    iconset = generate_iconset(output_dir)
 
-    icns_path = output_dir / "icon.icns"
-    subprocess.run(
-        ["iconutil", "-c", "icns", "-o", str(icns_path), str(iconset)],
-        check=True,
-    )
+    if sys.platform == "darwin":
+        path = _gen_icns(output_dir)
+    elif sys.platform == "win32":
+        path = _gen_ico(output_dir)
+    else:
+        path = _gen_png(output_dir)
 
-    shutil.rmtree(iconset)
-    print(f"Generated {icns_path}")
+    print(f"Generated {path}")
 
 
 if __name__ == "__main__":

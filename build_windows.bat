@@ -12,12 +12,16 @@ echo === 1. Running tests ===
 .venv\Scripts\pytest tests/ -q
 
 echo.
-echo === 2. Cleaning previous build ===
+echo === 2. Generating icon ===
+.venv\Scripts\python generate_icon.py
+
+echo.
+echo === 3. Cleaning previous build ===
 if exist build rmdir /s /q build
 if exist dist rmdir /s /q dist
 
 echo.
-echo === 3. Building executable with PyInstaller ===
+echo === 4. Building executable with PyInstaller ===
 .venv\Scripts\python -m PyInstaller pomodoro.spec
 
 echo.

@@ -36,6 +36,14 @@ a = Analysis(
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
 is_macos = sys.platform == "darwin"
+is_windows = sys.platform == "win32"
+
+if is_windows:
+    _icon = "icon.ico"
+elif is_macos:
+    _icon = "icon.icns"
+else:
+    _icon = "icon.png"
 
 exe = EXE(
     pyz,
@@ -53,7 +61,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=["icon.icns"] if is_macos else None,
+    icon=_icon if is_macos or is_windows else None,
 )
 
 coll = COLLECT(
