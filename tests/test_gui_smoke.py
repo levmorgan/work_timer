@@ -13,9 +13,8 @@ from timer_controller import Period, PomodoroTimer
 
 @pytest.fixture(scope="module")
 def qapp() -> QApplication:
-    # Headless Linux runners need the offscreen platform plugin
-    if sys.platform == "linux" and not os.environ.get("DISPLAY"):
-        os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    # All CI runners are headless — use offscreen rendering
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     app = QApplication.instance()
     if app is None:
         app = QApplication(sys.argv)
