@@ -45,6 +45,7 @@ DAILY_FONT_SIZE = 16
 PERIOD_FONT_SIZE = 12
 PROGRESS_FONT_SIZE = 11
 MIN_SCALE = 0.5
+MIN_SCALE_TIMER = 0.75
 MAX_SCALE = 1.0
 
 
@@ -384,21 +385,20 @@ class MainWindow(QMainWindow):
         h = self.height()
         scale_w = w / DEFAULT_WINDOW_W
         scale_h = h / DEFAULT_WINDOW_H
-        scale = max(min(scale_w, scale_h, MAX_SCALE), MIN_SCALE)
+        full_scale = max(min(scale_w, scale_h, MAX_SCALE), MIN_SCALE)
+        timer_scale = max(min(scale_w, scale_h, MAX_SCALE), MIN_SCALE_TIMER)
 
-        # Scale fonts (timer and daily counter only)
-        for lbl, font, base_size in [
-            (self._time_label, self._timer_font, TIMER_FONT_SIZE),
-            (self._daily_label, self._daily_font, DAILY_FONT_SIZE),
-        ]:
-            font.setPointSizeF(base_size * scale)
-            lbl.setFont(font)
+        # Scale fonts — timer shrinks less aggressively
+        self._timer_font.setPointSizeF(TIMER_FONT_SIZE * timer_scale)
+        self._time_label.setFont(self._timer_font)
+        self._daily_font.setPointSizeF(DAILY_FONT_SIZE * full_scale)
+        self._daily_label.setFont(self._daily_font)
 
         # Scale control button sizes, shrink padding so icons still fit
-        bw = max(int(BTN_W * scale), 40)
-        bh = max(int(BTN_H * scale), 28)
-        pad_v = max(int(6 * scale), 2)
-        pad_h = max(int(14 * scale), 6)
+        bw = max(int(BTN_W * full_scale), 40)
+        bh = max(int(BTN_H * full_scale), 28)
+        pad_v = max(int(6 * full_scale), 2)
+        pad_h = max(int(14 * full_scale), 6)
         scheme = self._db.get_setting("color_scheme") or "dark"
         if scheme == "light":
             bg, border, text = BTN_BG_LIGHT, BTN_BORDER_LIGHT, BTN_TEXT_LIGHT
@@ -417,11 +417,11 @@ class MainWindow(QMainWindow):
             btn.setStyleSheet(_btn_style)
 
         # Shrink margins and spacing at small sizes
-        top_margin = max(int(16 * scale), 4)
-        bottom_margin = max(int(20 * scale), 6)
-        side_margin = max(int(20 * scale), 8)
+        top_margin = max(int(16 * full_scale), 4)
+        bottom_margin = max(int(20 * full_scale), 6)
+        side_margin = max(int(20 * full_scale), 8)
         self._root.setContentsMargins(side_margin, top_margin, side_margin, bottom_margin)
-        self._root.setSpacing(max(int(12 * scale), 4))
+        self._root.setSpacing(max(int(12 * full_scale), 4))
 
     def closeEvent(self, event) -> None:
         self._save_window_state()
