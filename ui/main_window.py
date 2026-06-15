@@ -206,6 +206,9 @@ class MainWindow(QMainWindow):
         QShortcut(QKeySequence(Qt.Key.Key_Escape), self, activated=self._on_stop)
         QShortcut(QKeySequence(Qt.Key.Key_Right), self, activated=self._on_fast_forward)
 
+        # ---- Always on top (must run before show()) ----
+        self._apply_always_on_top()
+
         # ---- Initial display ----
         self._update_time_display()
         self._update_period_label()
@@ -214,9 +217,8 @@ class MainWindow(QMainWindow):
     # Called by main.py after show() — applies persisted state without
     # delaying the initial paint.
     def apply_saved_state(self) -> None:
-        self._restore_window_state()
         self._apply_theme()
-        self._apply_always_on_top()
+        self._restore_window_state()
         self._apply_alarm()
         self._apply_volume()
         self._update_time_display()
@@ -386,8 +388,11 @@ class MainWindow(QMainWindow):
 
     def _apply_always_on_top(self) -> None:
         enabled = self._db.get_setting("always_on_top") == "1"
+        was_visible = self.isVisible()
+        if was_visible:
+            self.hide()
         self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, enabled)
-        if self.isVisible():
+        if was_visible:
             self.show()
 
     # ---- Window state ----

@@ -1,0 +1,19 @@
+#!/bin/bash
+# Pre-commit hook — run the test suite before allowing a commit.
+# Install:  git config core.hooksPath .githooks
+
+set -euo pipefail
+
+# Find the best Python + pytest. Prefer the venv if present.
+if [ -f .venv/bin/pytest ]; then
+    PYTEST=".venv/bin/pytest"
+elif command -v pytest &>/dev/null; then
+    PYTEST="pytest"
+else
+    echo "pre-commit: pytest not found (install with: pip install -r requirements-dev.txt)"
+    exit 1
+fi
+
+echo "=== Running tests ==="
+$PYTEST tests/ -q
+echo "=== OK ==="
