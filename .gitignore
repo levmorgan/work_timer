@@ -8,4 +8,4 @@ dist/
 *.spec.bak
 .DS_Store
 *~
-.swp
+*.swp
