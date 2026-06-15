@@ -27,7 +27,7 @@ from ui.stats_dialog import StatsDialog
 
 from ui.theme import get_stylesheet
 
-FONT_FAMILY = "Menlo, Monaco, Courier New, monospace"
+FONT_FAMILY = "Menlo, Monaco, Consolas, Courier New, monospace"
 
 PLAY_SYMBOL = "▶"
 PAUSE_SYMBOL = "⏸"

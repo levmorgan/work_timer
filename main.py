@@ -15,8 +15,13 @@ def main() -> None:
     app = QApplication(sys.argv)
     app.setApplicationName("work_timer")
 
-    # Ctrl+C in the terminal quits the app cleanly
-    signal.signal(signal.SIGINT, lambda *_: app.quit())
+    # Ctrl+C in the terminal quits the app cleanly.
+    # SIGINT works on all platforms but on Windows the handler fires
+    # in a separate thread — app.quit() is thread-safe, so this is fine.
+    try:
+        signal.signal(signal.SIGINT, lambda *_: app.quit())
+    except (AttributeError, ValueError):
+        pass  # running without a console (e.g. double-clicked .exe)
 
     db = Database()
 
