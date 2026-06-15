@@ -36,7 +36,10 @@ jobs:
 
       - name: install system deps (Linux)
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libegl1 libgl1 libopengl0
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libegl1 libgl1 libopengl0
+          echo "QT_QPA_PLATFORM=offscreen" >> $GITHUB_ENV
 
       - name: create venv
         run: python -m venv .venv
