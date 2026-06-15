@@ -15,15 +15,22 @@ A minimal, greyscale Pomodoro timer for macOS, Linux, and Windows.
 - keyboard shortcuts: space (play/pause), escape (stop), right arrow (fast-forward)
 - window size/position remembered across sessions
 
-## running from source
+## macos
+
+### install
 
 ```
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
+```
+
+### run
+
+```
 .venv/bin/python main.py
 ```
 
-## building a standalone .app (macOS)
+### build
 
 ```
 .venv/bin/pip install -r requirements-dev.txt
@@ -31,14 +38,50 @@ python3 -m venv .venv
 # output: dist/work_timer.app
 ```
 
-## building on linux / windows
+## linux
+
+### install
 
 ```
-# linux
-./build_linux.sh
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+```
 
-# windows
+### run
+
+```
+.venv/bin/python main.py
+```
+
+### build
+
+```
+.venv/bin/pip install -r requirements-dev.txt
+./build_linux.sh
+# output: dist/work_timer/work_timer
+```
+
+## windows
+
+### install
+
+```
+python -m venv .venv
+.venv\Scripts\pip install -r requirements.txt
+```
+
+### run
+
+```
+.venv\Scripts\python main.py
+```
+
+### build
+
+```
+.venv\Scripts\pip install -r requirements-dev.txt
 build_windows.bat
+# output: dist\work_timer\work_timer.exe
 ```
 
 ## settings
