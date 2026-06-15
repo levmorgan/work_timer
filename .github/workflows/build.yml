@@ -39,14 +39,14 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libegl1 libgl1 libopengl0 libpulse0
 
       - name: create venv
-        env:
-          QT_QPA_PLATFORM: offscreen
         run: python -m venv .venv
 
       - name: install dependencies
         run: ${{ matrix.pip_path }} install -r requirements-dev.txt
 
       - name: build ${{ matrix.artifact }}
+        env:
+          QT_QPA_PLATFORM: offscreen
         run: ${{ matrix.script }}
 
       - name: package (macOS)
