@@ -22,7 +22,7 @@ jobs:
             pip_path: .venv/bin/pip
             pytest_path: .venv/bin/pytest
           - os: windows-latest
-            script: build_windows.bat
+            script: .\build_windows.bat
             artifact: work_timer.exe
             pip_path: .venv/Scripts/pip
             pytest_path: .venv/Scripts/pytest
