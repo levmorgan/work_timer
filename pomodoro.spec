@@ -21,7 +21,9 @@ a = Analysis(
     ["main.py"],
     pathex=[],
     binaries=[],
-    datas=matplotlib_datas + [("assets/fontawesome.otf", "assets")],
+    datas=matplotlib_datas + [
+        ("assets/fontawesome.otf", "assets"),
+    ] + [(f, ".") for f in ("icon.ico", "icon.png") if Path(f).exists()],
     hiddenimports=hidden_imports,
     hookspath=[],
     hooksconfig={},

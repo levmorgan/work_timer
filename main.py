@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QFontDatabase, QKeySequence, QShortcut
+from PySide6.QtGui import QFontDatabase, QIcon, QKeySequence, QShortcut
 from PySide6.QtWidgets import QApplication
 
 from database import Database
@@ -15,6 +15,25 @@ from timer_controller import PomodoroTimer
 def _load_icon_font() -> None:
     font_path = Path(__file__).resolve().parent / "assets" / "fontawesome.otf"
     QFontDatabase.addApplicationFont(str(font_path))
+
+
+def _set_app_icon(window) -> None:
+    """Load the platform-appropriate icon and set it as the window icon."""
+    if sys.platform == "win32":
+        icon_name = "icon.ico"
+    elif sys.platform == "darwin":
+        # macOS reads the icon from the .app bundle automatically
+        return
+    else:
+        icon_name = "icon.png"
+
+    if getattr(sys, "frozen", False):
+        icon_path = Path(sys._MEIPASS) / icon_name  # noqa
+    else:
+        icon_path = Path(__file__).resolve().parent / icon_name
+
+    if icon_path.is_file():
+        window.setWindowIcon(QIcon(str(icon_path)))
 
 
 def main() -> None:
@@ -39,6 +58,9 @@ def main() -> None:
     from ui.main_window import MainWindow
 
     window = MainWindow(db, timer)
+
+    # Set the window icon (taskbar, alt-tab, etc.)
+    _set_app_icon(window)
 
     # Cmd+Q works even when a modal is displayed
     quit_sc = QShortcut(QKeySequence(QKeySequence.StandardKey.Quit), window)
